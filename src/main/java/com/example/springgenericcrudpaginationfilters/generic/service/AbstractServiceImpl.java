@@ -42,7 +42,7 @@ public abstract class AbstractServiceImpl<E extends AbstractEntity, R extends Ab
         try {
             return repository.save(entity);
         } catch (Exception e) {
-            throw new EntitySaveException("Couldn't save entity: " + entity);
+            throw new EntitySaveException("Couldn't save entity: " + entity + "\n" + e.getMessage());
         }
     }
 
@@ -114,7 +114,7 @@ public abstract class AbstractServiceImpl<E extends AbstractEntity, R extends Ab
                     .totalPages(page.getTotalPages())
                     .build();
         } catch (Exception e) {
-            throw new EntityFindAllException("Couldn't get page with filters: " + search + "\n" + e.getCause().getMessage());
+            throw new EntityFindAllException("Couldn't get page with filters: " + search + "\n" + e.getMessage());
         }
     }
 }

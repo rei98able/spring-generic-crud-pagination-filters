@@ -3,10 +3,7 @@ package com.example.springgenericcrudpaginationfilters.generic.dto.enums;
 import com.example.springgenericcrudpaginationfilters.generic.dto.FilterRequestDTO;
 import lombok.extern.slf4j.Slf4j;
 
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.Expression;
-import javax.persistence.criteria.Predicate;
-import javax.persistence.criteria.Root;
+import javax.persistence.criteria.*;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -21,10 +18,9 @@ public enum Operator {
      * Filter when given value is exactly the same
      */
     EQUAL {
-        public <T> Predicate build(Root<T> root, CriteriaBuilder cb, FilterRequestDTO request, Predicate predicate) {
+        public <T> Predicate build(Root<T> root, CriteriaBuilder cb, FilterRequestDTO request, Predicate predicate, Path<Object> path) {
             Object value = request.getFieldType().parse(request.getValue().toString());
-            Expression<?> key = root.get(request.getKey());
-            return cb.and(cb.equal(key, value), predicate);
+            return cb.and(cb.equal(path.as(String.class), value), predicate);
         }
     },
 
@@ -32,10 +28,9 @@ public enum Operator {
      * Filter when given value is not the same
      */
     NOT_EQUAL {
-        public <T> Predicate build(Root<T> root, CriteriaBuilder cb, FilterRequestDTO request, Predicate predicate) {
+        public <T> Predicate build(Root<T> root, CriteriaBuilder cb, FilterRequestDTO request, Predicate predicate, Path<Object> path) {
             Object value = request.getFieldType().parse(request.getValue().toString());
-            Expression<?> key = root.get(request.getKey());
-            return cb.and(cb.notEqual(key, value), predicate);
+            return cb.and(cb.notEqual(path.as(String.class), value), predicate);
         }
     },
 
@@ -43,9 +38,8 @@ public enum Operator {
      * Filter when given value is in the text
      */
     LIKE {
-        public <T> Predicate build(Root<T> root, CriteriaBuilder cb, FilterRequestDTO request, Predicate predicate) {
-            Expression<String> key = root.get(request.getKey());
-            return cb.and(cb.like(cb.upper(key), "%" + request.getValue().toString().toUpperCase() + "%"), predicate);
+        public <T> Predicate build(Root<T> root, CriteriaBuilder cb, FilterRequestDTO request, Predicate predicate, Path<Object> path) {
+            return cb.and(cb.like(path.as(String.class), "%" + request.getValue().toString() + "%"), predicate);
         }
     },
 
@@ -53,7 +47,7 @@ public enum Operator {
      * Filter when given value is in array of values
      */
     IN {
-        public <T> Predicate build(Root<T> root, CriteriaBuilder cb, FilterRequestDTO request, Predicate predicate) {
+        public <T> Predicate build(Root<T> root, CriteriaBuilder cb, FilterRequestDTO request, Predicate predicate, Path<Object> path) {
             List<Object> values = request.getValues();
             CriteriaBuilder.In<Object> inClause = cb.in(root.get(request.getKey()));
             for (Object value : values) {
@@ -67,7 +61,7 @@ public enum Operator {
      * Filter when given value is in between of values
      */
     BETWEEN {
-        public <T> Predicate build(Root<T> root, CriteriaBuilder cb, FilterRequestDTO request, Predicate predicate) {
+        public <T> Predicate build(Root<T> root, CriteriaBuilder cb, FilterRequestDTO request, Predicate predicate, Path<Object> path) {
             Object value = request.getFieldType().parse(request.getValue().toString());
             Object valueTo = request.getFieldType().parse(request.getValueTo().toString());
             if (request.getFieldType() == FieldType.DATE) {
@@ -89,6 +83,6 @@ public enum Operator {
         }
     };
 
-    public abstract <T> Predicate build(Root<T> root, CriteriaBuilder cb, FilterRequestDTO request, Predicate predicate);
+    public abstract <T> Predicate build(Root<T> root, CriteriaBuilder cb, FilterRequestDTO request, Predicate predicate, Path<Object> path);
 
 }

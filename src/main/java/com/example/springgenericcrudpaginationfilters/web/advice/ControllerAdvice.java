@@ -31,6 +31,7 @@ public class ControllerAdvice {
     @ExceptionHandler(EntityFindByIdException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public ResponseEntity<ErrorMessageDTO> findException(EntityFindByIdException er, WebRequest req) {
+        er.printStackTrace();
         ErrorMessageDTO errorMessage = new ErrorMessageDTO(
                 NOT_FOUND,
                 new Date(),
@@ -50,6 +51,7 @@ public class ControllerAdvice {
     @ExceptionHandler(EntityFindAllException.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ResponseEntity<ErrorMessageDTO> findAllException(EntityFindAllException er, WebRequest req) {
+        er.printStackTrace();
         ErrorMessageDTO errorMessage = new ErrorMessageDTO(
                 INTERNAL_SERVER_ERROR,
                 new Date(),
@@ -69,6 +71,7 @@ public class ControllerAdvice {
     @ExceptionHandler(EntitySaveException.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ResponseEntity<ErrorMessageDTO> saveException(EntitySaveException er, WebRequest req) {
+        er.printStackTrace();
         ErrorMessageDTO errorMessage = new ErrorMessageDTO(
                 INTERNAL_SERVER_ERROR,
                 new Date(),
@@ -88,6 +91,7 @@ public class ControllerAdvice {
     @ExceptionHandler(EntityUpdateException.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ResponseEntity<ErrorMessageDTO> updateException(EntityUpdateException er, WebRequest req) {
+        er.printStackTrace();
         ErrorMessageDTO errorMessage = new ErrorMessageDTO(
                 INTERNAL_SERVER_ERROR,
                 new Date(),
@@ -107,6 +111,7 @@ public class ControllerAdvice {
     @ExceptionHandler(EntityDeleteException.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ResponseEntity<ErrorMessageDTO> deleteException(EntityDeleteException er, WebRequest req) {
+        er.printStackTrace();
         ErrorMessageDTO errorMessage = new ErrorMessageDTO(
                 INTERNAL_SERVER_ERROR,
                 new Date(),
