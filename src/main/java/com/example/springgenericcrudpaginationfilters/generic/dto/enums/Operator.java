@@ -20,7 +20,7 @@ public enum Operator {
     EQUAL {
         public <T> Predicate build(Root<T> root, CriteriaBuilder cb, FilterRequestDTO request, Predicate predicate, Path<Object> path) {
             Object value = request.getFieldType().parse(request.getValue().toString());
-            return cb.and(cb.equal(path.as(String.class), value), predicate);
+            return cb.and(cb.equal(path.as(value.getClass()), value), predicate);
         }
     },
 
@@ -30,7 +30,7 @@ public enum Operator {
     NOT_EQUAL {
         public <T> Predicate build(Root<T> root, CriteriaBuilder cb, FilterRequestDTO request, Predicate predicate, Path<Object> path) {
             Object value = request.getFieldType().parse(request.getValue().toString());
-            return cb.and(cb.notEqual(path.as(String.class), value), predicate);
+            return cb.and(cb.notEqual(path.as(value.getClass()), value), predicate);
         }
     },
 
@@ -49,7 +49,7 @@ public enum Operator {
     IN {
         public <T> Predicate build(Root<T> root, CriteriaBuilder cb, FilterRequestDTO request, Predicate predicate, Path<Object> path) {
             List<Object> values = request.getValues();
-            CriteriaBuilder.In<Object> inClause = cb.in(root.get(request.getKey()));
+            CriteriaBuilder.In<Object> inClause = cb.in(path.as(values.get(0).getClass()));
             for (Object value : values) {
                 inClause.value(request.getFieldType().parse(value.toString()));
             }
