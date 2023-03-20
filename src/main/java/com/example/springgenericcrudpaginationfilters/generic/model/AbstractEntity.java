@@ -24,5 +24,5 @@ public abstract class AbstractEntity implements Serializable {
     // switch GenerationType if you have not common postgresql sequences
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    protected Long id;
 }

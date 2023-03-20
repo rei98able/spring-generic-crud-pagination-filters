@@ -58,7 +58,7 @@ public abstract class AbstractServiceImpl<E extends AbstractEntity, R extends Ab
         try {
             E entityFromBd = repository.findById(entity.getId()).orElseThrow();
             patchingMapper.map(entity, entityFromBd);
-            return repository.saveAndFlush(entity);
+            return repository.saveAndFlush(entityFromBd);
         } catch (NoSuchElementException e) {
             throw new EntityFindByIdException("Can't find with id: " + entity.getId());
         } catch (Exception e) {
