@@ -16,7 +16,11 @@ public class ApplicationConfiguration {
     @Bean
     ModelMapper patchingModelMapper() {
         ModelMapper modelMapper = new ModelMapper();
-        modelMapper.getConfiguration().setPropertyCondition(Conditions.isNotNull());
+        modelMapper.getConfiguration()
+                .setAmbiguityIgnored(true)
+                .setSkipNullEnabled(true)
+                .setCollectionsMergeEnabled(false)
+                .setPropertyCondition(Conditions.isNotNull());
         return modelMapper;
     }
 }

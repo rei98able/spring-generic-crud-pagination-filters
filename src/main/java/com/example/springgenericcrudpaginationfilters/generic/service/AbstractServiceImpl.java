@@ -13,7 +13,11 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.persistence.ManyToMany;
+import java.lang.reflect.Field;
+import java.util.HashSet;
 import java.util.NoSuchElementException;
+import java.util.Set;
 
 /**
  * Abstract CRUD Service Implementation
@@ -58,11 +62,12 @@ public abstract class AbstractServiceImpl<E extends AbstractEntity, R extends Ab
         try {
             E entityFromBd = repository.findById(entity.getId()).orElseThrow();
             patchingMapper.map(entity, entityFromBd);
+//            handleManyToManyRelationships(entity, entityFromBd);
             return repository.saveAndFlush(entityFromBd);
         } catch (NoSuchElementException e) {
             throw new EntityFindByIdException("Can't find with id: " + entity.getId());
         } catch (Exception e) {
-            throw new EntityUpdateException("Couldn't update entity: " + entity);
+            throw new EntityUpdateException("Couldn't update entity: " + entity + e.getMessage());
         }
     }
 
@@ -116,5 +121,35 @@ public abstract class AbstractServiceImpl<E extends AbstractEntity, R extends Ab
         } catch (Exception e) {
             throw new EntityFindAllException("Couldn't get page with filters: " + search + "\n" + e.getMessage());
         }
+    }
+
+    private void handleManyToManyRelationships(E entityFromRequest, E entityFromDb) {
+        Set<Field> manyToManyFields = getManyToManyFields(entityFromDb.getClass());
+        for (Field field : manyToManyFields) {
+            field.setAccessible(true);
+            try {
+                Set<E> existingItems = (Set<E>) field.get(entityFromDb);
+                Set<E> newItems = (Set<E>) field.get(entityFromRequest);
+                existingItems.clear();
+                if (newItems != null) {
+                    existingItems.addAll(newItems);
+                }
+            } catch (IllegalAccessException e) {
+                throw new RuntimeException("Error updating many-to-many relationship", e);
+            }
+        }
+    }
+
+    private Set<Field> getManyToManyFields(Class<?> entityClass) {
+        Set<Field> manyToManyFields = new HashSet<>();
+        for (Field field : entityClass.getDeclaredFields()) {
+            if (field.isAnnotationPresent(ManyToMany.class)) {
+                manyToManyFields.add(field);
+            }
+        }
+        if (entityClass.getSuperclass() != null && !entityClass.getSuperclass().equals(Object.class)) {
+            manyToManyFields.addAll(getManyToManyFields(entityClass.getSuperclass()));
+        }
+        return manyToManyFields;
     }
 }
