@@ -32,19 +32,13 @@ public class SearchSpecification<T extends AbstractEntity> implements Specificat
     @Override
     public Predicate toPredicate(@NonNull Root<T> root, @NonNull CriteriaQuery<?> query, CriteriaBuilder cb) {
         Predicate predicate = cb.equal(cb.literal(Boolean.TRUE), Boolean.TRUE);
-        List<Order> orders = new ArrayList<>();
+
         for (FilterRequestDTO filter : this.request.getFilters()) {
             log.info("Filter: {} {} {}", filter.getKey(), filter.getOperator().toString(), filter.getValue());
-            String[] nestedFields = filter.getKey().split("\\.");
-            Path<Object> path = root.get(nestedFields[0]);
-            for (int i = 1; i < nestedFields.length; i++) {
-                path = path.get(nestedFields[i]);
-            }
-            log.info(path.getAlias());
-            predicate = filter.getOperator().build(root, cb, filter, predicate, path);
+            predicate = filter.getOperator().build(root, cb, filter, predicate);
         }
 
-
+        List<Order> orders = new ArrayList<>();
         for (SortRequestDTO sort : this.request.getSorts()) {
             orders.add(sort.getDirection().build(root, cb, sort));
         }

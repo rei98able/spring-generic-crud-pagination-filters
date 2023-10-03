@@ -18,19 +18,20 @@ public enum Operator {
      * Filter when given value is exactly the same
      */
     EQUAL {
-        public <T> Predicate build(Root<T> root, CriteriaBuilder cb, FilterRequestDTO request, Predicate predicate, Path<Object> path) {
+        public <T> Predicate build(Root<T> root, CriteriaBuilder cb, FilterRequestDTO request, Predicate predicate) {
             Object value = request.getFieldType().parse(request.getValue().toString());
-            return cb.and(cb.equal(path.as(value.getClass()), value), predicate);
+            Expression<?> key = this.getPath(root, request);
+            return cb.and(cb.equal(key, value), predicate);
         }
     },
-
     /**
      * Filter when given value is not the same
      */
     NOT_EQUAL {
-        public <T> Predicate build(Root<T> root, CriteriaBuilder cb, FilterRequestDTO request, Predicate predicate, Path<Object> path) {
+        public <T> Predicate build(Root<T> root, CriteriaBuilder cb, FilterRequestDTO request, Predicate predicate) {
             Object value = request.getFieldType().parse(request.getValue().toString());
-            return cb.and(cb.notEqual(path.as(value.getClass()), value), predicate);
+            Expression<?> key = this.getPath(root, request);
+            return cb.and(cb.notEqual(key, value), predicate);
         }
     },
 
@@ -38,18 +39,20 @@ public enum Operator {
      * Filter when given value is in the text
      */
     LIKE {
-        public <T> Predicate build(Root<T> root, CriteriaBuilder cb, FilterRequestDTO request, Predicate predicate, Path<Object> path) {
-            return cb.and(cb.like(path.as(String.class), "%" + request.getValue().toString() + "%"), predicate);
+        public <T> Predicate build(Root<T> root, CriteriaBuilder cb, FilterRequestDTO request, Predicate predicate) {
+            Expression<String> key = this.getPath(root, request);
+            return cb.and(cb.like(cb.upper(key), "%" + request.getValue().toString().toUpperCase() + "%"), predicate);
         }
     },
+
 
     /**
      * Filter when given value is in array of values
      */
     IN {
-        public <T> Predicate build(Root<T> root, CriteriaBuilder cb, FilterRequestDTO request, Predicate predicate, Path<Object> path) {
+        public <T> Predicate build(Root<T> root, CriteriaBuilder cb, FilterRequestDTO request, Predicate predicate) {
             List<Object> values = request.getValues();
-            CriteriaBuilder.In<Object> inClause = cb.in(path.as(values.get(0).getClass()));
+            CriteriaBuilder.In<Object> inClause = cb.in(this.getPath(root, request));
             for (Object value : values) {
                 inClause.value(request.getFieldType().parse(value.toString()));
             }
@@ -61,20 +64,20 @@ public enum Operator {
      * Filter when given value is in between of values
      */
     BETWEEN {
-        public <T> Predicate build(Root<T> root, CriteriaBuilder cb, FilterRequestDTO request, Predicate predicate, Path<Object> path) {
+        public <T> Predicate build(Root<T> root, CriteriaBuilder cb, FilterRequestDTO request, Predicate predicate) {
             Object value = request.getFieldType().parse(request.getValue().toString());
             Object valueTo = request.getFieldType().parse(request.getValueTo().toString());
             if (request.getFieldType() == FieldType.DATE) {
                 LocalDateTime startDate = (LocalDateTime) value;
                 LocalDateTime endDate = (LocalDateTime) valueTo;
-                Expression<LocalDateTime> key = root.get(request.getKey());
+                Expression<LocalDateTime> key = this.getPath(root, request);
                 return cb.and(cb.and(cb.greaterThanOrEqualTo(key, startDate), cb.lessThanOrEqualTo(key, endDate)), predicate);
             }
 
             if (request.getFieldType() != FieldType.CHAR && request.getFieldType() != FieldType.BOOLEAN) {
                 Number start = (Number) value;
                 Number end = (Number) valueTo;
-                Expression<Number> key = root.get(request.getKey());
+                Expression<Number> key = this.getPath(root, request);
                 return cb.and(cb.and(cb.ge(key, start), cb.le(key, end)), predicate);
             }
 
@@ -83,6 +86,15 @@ public enum Operator {
         }
     };
 
-    public abstract <T> Predicate build(Root<T> root, CriteriaBuilder cb, FilterRequestDTO request, Predicate predicate, Path<Object> path);
+    public abstract <T> Predicate build(Root<T> root, CriteriaBuilder cb, FilterRequestDTO request, Predicate predicate);
 
+
+    public <T, V> Path<V> getPath(Root<T> root, FilterRequestDTO request) {
+        String[] keys = request.getKey().split("\\.");
+        Path<V> path = root.get(keys[0]);
+        for (int i = 1; i < keys.length; i++) {
+            path = path.get(keys[i]);
+        }
+        return path;
+    }
 }
